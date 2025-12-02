@@ -1,26 +1,38 @@
-import mongoose from "mongoose";
+// src/server.ts
+import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
+import session from "express-session";
+import cookieParser from "cookie-parser";
+import authRoutes from "./routes/login.routes";
 
-// Load .env file
 dotenv.config();
+const app = express();
 
-// Get port and DB URI from environment variables
-const PORT = process.env.PORT || 3000;
-const DB_URI = process.env.DATABASE_URI || "";
-
-if (!DB_URI) {
-  console.error("DATABASE_URI is not set.");
-  process.exit(1);
-}
-
-// Connect to MongoDB
-mongoose
-  .connect(DB_URI)
-  .then(() => {
-    console.log("✅ MongoDB connection successful!");
-    // Simple message for server test
-    console.log(`Server is ready on port ${PORT}`);
+app.use(
+  cors({
+    origin: "http://localhost:3000", // 프론트 URL
+    credentials: true,
   })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err);
-  });
+);
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }, // https가 아니면 false
+  })
+);
+
+app.use("/api/auth", authRoutes);
+
+mongoose
+  .connect(process.env.MONGO_URI!)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error(err));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
