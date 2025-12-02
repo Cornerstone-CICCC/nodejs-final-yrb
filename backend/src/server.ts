@@ -5,6 +5,7 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import userRouter from './routes/user.routes'
 import chatRouter from './routes/chat.routes'
+import chatSocket from './sockets/chat.socket'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -21,12 +22,12 @@ app.use('/chats', chatRouter)
 
 // Create HTTP server and attach SocketIO
 const server = createServer(app)
-const id = new Server(server, {
+const io = new Server(server, {
   cors: {
-    origin: 'http://127.0.0.1.5500',
+    origin: 'http://127.0.0.1:5500',
     methods: ["GET", "POST"]
-  }
-}
+  },
+})
 
 // Connect to MongoDB and start server
 const MONGO_URI = process.env.DATABASE_URL!
