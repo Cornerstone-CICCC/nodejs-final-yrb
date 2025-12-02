@@ -1,50 +1,26 @@
-import express from 'express'
-import { createServer } from 'http'
-import { Server } from 'socket.io'
-import cors from 'cors'
-import mongoose from 'mongoose'
-import userRouter from './routes/user.routes'
-import chatRouter from './routes/chat.routes'
-import dotenv from 'dotenv'
-dotenv.config()
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-// Create server
-const app = express()
+// Load .env file
+dotenv.config();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Get port and DB URI from environment variables
+const PORT = process.env.PORT || 3000;
+const DB_URI = process.env.DATABASE_URI || "";
 
-// Routes
-app.use('/users', userRouter)
-app.use('/chats', chatRouter)
-
-// Create HTTP server and attach SocketIO
-const server = createServer(app)
-const id = new Server(server, {
-  cors: {
-    origin: 'http://127.0.0.1.5500',
-    methods: ["GET", "POST"]
-  }
+if (!DB_URI) {
+  console.error("DATABASE_URI is not set.");
+  process.exit(1);
 }
 
-// Connect to MongoDB and start server
-const MONGO_URI = process.env.DATABASE_URL!
+// Connect to MongoDB
 mongoose
-  .connect(MONGO_URI, { dbName: 'chatroom' })
+  .connect(DB_URI)
   .then(() => {
-    console.log('Connected to MongoDB database');
-
-    // Start Socket.IO
-    chatSocket(io);
-
-    // Start the server
-    const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    });
+    console.log("✅ MongoDB connection successful!");
+    // Simple message for server test
+    console.log(`Server is ready on port ${PORT}`);
   })
-  .catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err);
   });
-
