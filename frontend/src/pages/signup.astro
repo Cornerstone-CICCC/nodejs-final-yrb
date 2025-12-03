@@ -1,0 +1,101 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import "../styles/global.css"
+---
+<Layout>
+    <Header></Header>
+    <section class="auth-section">
+    <h2>Login On Your Account</h2>
+    
+    <div class="tabs">
+        <div class="tab-item active" data-target="login">
+            <img src="/images/login_logo.svg" alt="Login Icon" />
+            <button class="tab">Login</button>
+        </div>
+        <div class="tab-item" data-target="signup">
+            <img src="/images/icon_signup.svg" alt="Sign Up Icon" />
+            <button class="tab">Sign Up</button>
+        </div>
+    </div>
+
+    <form id="login" class="login-form form-content active">
+        <fieldset class="input-group">
+            <legend>Username</legend>
+            <div class="input-wrapper">
+                <img src="../images/user_icon.svg" alt="User Icon">
+                <input type="text" id="username" placeholder="Enter Username..." required />
+            </div>
+        </fieldset>
+
+        <fieldset class="input-group">
+            <legend>Password</legend>
+            <div class="input-wrapper">
+                <img src="../images/pass_icon.svg" alt="Pass Icon">
+            <input type="password" id="password" placeholder="Enter Password..." required />
+            </div>
+        </fieldset>
+
+        <button type="submit" class="login-btn">
+        <img src="../images/icon_login_white.svg" alt="Login Icon" />    
+            Login</button>
+    </form>
+        <!-- Sign Up Form -->
+    <form id="signup" class="login-form form-content">
+        <fieldset class="input-group">
+            <legend>Username</legend>
+            <div class="input-wrapper">
+                <img src="../images/user_icon.svg" alt="User Icon">
+                <input type="text" id="new-username" placeholder="Enter Username..." required />
+            </div>
+        </fieldset>
+
+        <fieldset class="input-group">
+            <legend>Email</legend>
+            <div class="input-wrapper">
+            <img src="../images/email_icon.svg" alt="User Icon">
+            <input type="email" id="email" placeholder="Enter Email..." required />
+            </div>
+        </fieldset>
+
+        <fieldset class="input-group">
+            <legend>Password</legend>
+            <div class="input-wrapper">
+            <img src="../images/pass_icon.svg" alt="Pass Icon"> 
+            <input type="password" id="new-password" placeholder="Create Password..." required />
+            </div>
+        </fieldset>
+
+        <button type="submit" class="signup-btn">
+        <img src="../images/icon_signup_white.svg" alt="Sign Up Icon" />    
+            Sign Up</button>
+    </form>
+  </section>
+</Layout>
+
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabs = document.querySelectorAll(".tab-item");
+    const forms = document.querySelectorAll(".form-content");
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", (e) => {
+        e.preventDefault();
+        
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const target = tab.getAttribute("data-target");
+        
+        if (target) {
+          forms.forEach(form => {
+            form.classList.remove("active");
+            if (form.id === target) {
+              form.classList.add("active");
+            }
+          });
+        }
+      });
+    });
+  });
+</script>
