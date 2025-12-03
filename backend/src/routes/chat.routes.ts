@@ -13,6 +13,6 @@ chatRouter.get('/', chatController.getUserChatRooms);
 chatRouter.post('/', chatController.createChatRoom);
 
 // get all message in a room
-chatRouter.get('/:roomId/messages', chatController.getMessagesByRoom);
+chatRouter.get('/messages/:roomId', chatController.getMessagesByRoom);
 
 export default chatRouter;

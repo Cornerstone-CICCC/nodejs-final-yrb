@@ -13,5 +13,5 @@ chatRouter.get('/', chat_controller_1.default.getUserChatRooms);
 // create new chat group
 chatRouter.post('/', chat_controller_1.default.createChatRoom);
 // get all message in a room
-chatRouter.get('/:roomId/messages', chat_controller_1.default.getMessagesByRoom);
+chatRouter.get('/messages/:roomId', chat_controller_1.default.getMessagesByRoom);
 exports.default = chatRouter;
