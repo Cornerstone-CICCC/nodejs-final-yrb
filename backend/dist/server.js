@@ -25,8 +25,8 @@ app.use('/chat', chat_routes_1.default);
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: 'http://127.0.0.1:5500',
-        methods: ["GET", "POST"]
+        origin: "http://127.0.0.1:5500",
+        methods: ["GET", "POST"],
     },
 });
 // Connect to MongoDB and start server
@@ -34,7 +34,7 @@ const MONGO_URI = process.env.DATABASE_URL;
 mongoose_1.default
     .connect(MONGO_URI, { dbName: 'chatting_app' })
     .then(() => {
-    console.log('Connected to MongoDB database');
+    console.log("Connected to MongoDB database");
     // Start Socket.IO
     (0, chat_socket_1.default)(io);
     // Start the server
@@ -44,5 +44,5 @@ mongoose_1.default
     });
 })
     .catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
+    console.error("Error connecting to MongoDB:", error);
 });

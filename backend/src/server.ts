@@ -37,7 +37,7 @@ mongoose
     console.log("Connected to MongoDB database");
 
     // Start Socket.IO
-    // chatSocket(io);
+    chatSocket(io);
 
     // Start the server
     const PORT = process.env.PORT || 3000;
