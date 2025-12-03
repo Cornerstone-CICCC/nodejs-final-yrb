@@ -9,8 +9,8 @@ const socket_io_1 = require("socket.io");
 const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
 // import userRouter from './routes/user.routes'
-// import chatRouter from './routes/chat.routes'
-// import chatSocket from './sockets/chat.socket'
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
+const chat_socket_1 = __importDefault(require("./sockets/chat.socket"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // Create server
@@ -19,24 +19,24 @@ const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 // Routes
-// app.use("/users", userRouter);
-// app.use("/chats", chatRouter);
+// app.use('/users', userRouter)
+app.use('/chat', chat_routes_1.default);
 // Create HTTP server and attach SocketIO
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: "http://127.0.0.1:5500",
-        methods: ["GET", "POST"],
+        origin: 'http://127.0.0.1:5500',
+        methods: ["GET", "POST"]
     },
 });
 // Connect to MongoDB and start server
 const MONGO_URI = process.env.DATABASE_URL;
 mongoose_1.default
-    .connect(MONGO_URI, { dbName: "chatroom" })
+    .connect(MONGO_URI, { dbName: 'chatting_app' })
     .then(() => {
-    console.log("Connected to MongoDB database");
+    console.log('Connected to MongoDB database');
     // Start Socket.IO
-    // chatSocket(io);
+    (0, chat_socket_1.default)(io);
     // Start the server
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
@@ -44,5 +44,5 @@ mongoose_1.default
     });
 })
     .catch((error) => {
-    console.error("Error connecting to MongoDB:", error);
+    console.error('Error connecting to MongoDB:', error);
 });
