@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io'
 import mongoose from 'mongoose'
 import { Chat } from '../models/chat.model'
+import { User } from '../models/user.model'
 
 const setupChatSocket = (io: Server) => {
   io.on('connection', (socket: Socket) => {
@@ -49,16 +50,23 @@ const setupChatSocket = (io: Server) => {
 
     // Postmessage
     socket.on('sendMessage', async (data) => {
-      const { roomId, username, message } = data
-      try{
-        // Save message in MongoDB
-        const chat = new Chat({ roomId, username, message })
-        await chat.save()
+      const { roomId, message } = data
 
-        io.to(roomId).emit('newMessage', chat)
-      } catch(err){
-        console.error('Error saving chat:', err)
-      }
+      const userId = (socket.request as any).session.userId
+      if(!userId) return
+
+      const user = await User.findById(userId)
+      if(!user) return
+
+      // Save message in MongoDB
+      const chat = new Chat({
+        roomId,
+        username: user.username,
+        message
+      })
+
+      await chat.save()
+      io.to(roomId).emit('newMessage', chat)
     })
 
     // Disconnect
