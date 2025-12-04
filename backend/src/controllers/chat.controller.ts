@@ -1,16 +1,18 @@
 import { Request, Response } from 'express'
 import { Room } from '../models/room.model'
 import { Chat } from '../models/chat.model'
+import { User } from '../models/user.model'
 
-const DUMMY_USER_ID = 'dummyUserId';
+// const DUMMY_USER_ID = 'dummyUserId';
 
 // Get chatrooms for a user (Contact List)
 const getUserChatRooms = async (req: Request, res: Response) => {
   try {
-    // const userId = req.user.id as string  // set authMiddleware
-    const userId = DUMMY_USER_ID
+    const userId = req.session.userId
+    // const userId = DUMMY_USER_ID
+    if(!userId) return res.status(401).json({ error: "User not authenticated."})
+    
     const keyword = req.query.q as string | undefined;
-
     let rooms = await Room.find({ users: userId }).sort({ updatedAt: -1 }).lean();
 
     // latestMessage
@@ -39,14 +41,20 @@ const getUserChatRooms = async (req: Request, res: Response) => {
 // Create a new chatroom (or return existing one)
 const createChatRoom = async (req: Request, res: Response) => {
   try {
-    // const userA = req.user.id
-    const userA = DUMMY_USER_ID
+    const userA = req.session.userId
+    // const userA = DUMMY_USER_ID
+    if(!userA) return res.status(401).json({ error: "User not authenticated."})
+    
     const { userB } = req.body
-
     if (!userB) return res.status(400).json({ error: 'Recipient userId required' });
 
-    let room = await Room.findOne({ users: { $all: [userA, userB] } });
+    // check if userB exists
+    const targetUser = await User.findById(userB)
+    if(!targetUser){
+      return res.status(400).json({ error: "User does not exist"})
+    }
 
+    let room = await Room.findOne({ users: { $all: [userA, userB] } });
     if (!room) {
       room = new Room({ users: [userA, userB] });
       await room.save();
@@ -63,10 +71,19 @@ const createChatRoom = async (req: Request, res: Response) => {
 // Get messages for a specific room
 const getMessagesByRoom = async (req: Request, res: Response) => {
   try {
+    const userId = req.session.userId
+    if(!userId) return res.status(401).json({ error: "Login required" })
+
     const { roomId } = req.params
 
-    const messages = await Chat.find({ roomId }).sort({ createdAt: 1 })
+    // check if user is a member of room
+    const room = await Room.findById(roomId)
+    if(!room) return res.status(404).json({ message: "Room not found"})
+    if(!room.users.includes(userId)){
+      return res.status(403).json({ error: "You are not a member of this room" })
+    }
 
+    const messages = await Chat.find({ roomId }).sort({ createdAt: 1 })
     res.status(200).json(messages)
   } catch (error) {
     res.status(500).json({ error: 'Error fetching messages' })
