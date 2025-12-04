@@ -111,10 +111,10 @@ import "../styles/global.css"
         e.preventDefault();
         const formData = new FormData(signup_form);
         const username = String(formData.get('new-username') || '').trim();
-        const emailAddress = String(formData.get('emailAddress') || '').trim();
+        const email = String(formData.get('emailAddress') || '').trim();
         const password = String(formData.get('new-password') || '').trim();
 
-        if (!username || !password || !emailAddress) {
+        if (!username || !email || !password ) {
           alert("Please completed all fields");
           return;
         }
@@ -123,7 +123,7 @@ import "../styles/global.css"
           const res = await fetch('http://localhost:3000/users/signup', {
 							method: "POST",
 							headers: { "Content-type": "application/json" },
-							body: JSON.stringify({ username, password, emailAddress})
+							body: JSON.stringify({ username, email, password})
 						});
           const data = await res.json().catch(() => ({}));
           if(res.ok){
