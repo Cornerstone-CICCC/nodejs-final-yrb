@@ -6,7 +6,7 @@ import "../styles/global.css"
 <Layout>
     <Header></Header>
     <section class="auth-section">
-    <h2>Login On Your Account</h2>
+    <h2 class="title-register">Login On Your Account</h2>
     
     <div class="tabs">
         <div class="tab-item active" data-target="login">
@@ -24,7 +24,7 @@ import "../styles/global.css"
             <legend>Username</legend>
             <div class="input-wrapper">
                 <img src="../images/user_icon.svg" alt="User Icon">
-                <input type="text" id="username" placeholder="Enter Username..." required />
+                <input type="text" id="username" name="username" placeholder="Enter Username..." required />
             </div>
         </fieldset>
 
@@ -32,12 +32,12 @@ import "../styles/global.css"
             <legend>Password</legend>
             <div class="input-wrapper">
                 <img src="../images/pass_icon.svg" alt="Pass Icon">
-            <input type="password" id="password" placeholder="Enter Password..." required />
+            <input type="password" id="password" name="password" placeholder="Enter Password..." required />
             </div>
         </fieldset>
 
         <button type="submit" class="login-btn">
-        <img src="../images/icon_login_white.svg" alt="Login Icon" />    
+            <img src="../images/login_white.svg" alt="Pass Icon">   
             Login</button>
     </form>
         <!-- Sign Up Form -->
@@ -46,7 +46,7 @@ import "../styles/global.css"
             <legend>Username</legend>
             <div class="input-wrapper">
                 <img src="../images/user_icon.svg" alt="User Icon">
-                <input type="text" id="new-username" placeholder="Enter Username..." required />
+                <input type="text" id="new-username" name="new-username" placeholder="Enter Username..." required />
             </div>
         </fieldset>
 
@@ -54,7 +54,7 @@ import "../styles/global.css"
             <legend>Email</legend>
             <div class="input-wrapper">
             <img src="../images/email_icon.svg" alt="User Icon">
-            <input type="email" id="email" placeholder="Enter Email..." required />
+            <input type="email" id="email" name="emailAddress" placeholder="Enter Email..." required />
             </div>
         </fieldset>
 
@@ -62,7 +62,7 @@ import "../styles/global.css"
             <legend>Password</legend>
             <div class="input-wrapper">
             <img src="../images/pass_icon.svg" alt="Pass Icon"> 
-            <input type="password" id="new-password" placeholder="Create Password..." required />
+            <input type="password" id="new-password" name="new-password" placeholder="Create Password..." required />
             </div>
         </fieldset>
 
@@ -77,6 +77,9 @@ import "../styles/global.css"
   document.addEventListener("DOMContentLoaded", () => {
     const tabs = document.querySelectorAll(".tab-item");
     const forms = document.querySelectorAll(".form-content");
+    const title_register = document.querySelector(".title-register");
+    const signup_form = document.getElementById('signup');
+    const login_form = document.getElementById('login');
 
     tabs.forEach(tab => {
       tab.addEventListener("click", (e) => {
@@ -92,10 +95,99 @@ import "../styles/global.css"
             form.classList.remove("active");
             if (form.id === target) {
               form.classList.add("active");
+              if(form.id == "signup"){
+                title_register.textContent="Sign For Account"
+              }else{
+                title_register.textContent="Login On Your Account"
+              }
             }
           });
         }
       });
     });
+
+    if(signup_form && signup_form instanceof HTMLFormElement){
+      signup_form.addEventListener('submit', async(e) =>{
+        e.preventDefault();
+        const formData = new FormData(signup_form);
+        const username = String(formData.get('new-username') || '').trim();
+        const emailAddress = String(formData.get('emailAddress') || '').trim();
+        const password = String(formData.get('new-password') || '').trim();
+
+        if (!username || !password || !emailAddress) {
+          alert("Por favor completa todos los campos");
+          return;
+        }
+
+        try{
+          const res = await fetch('http://localhost:3000/users/signup', {
+							method: "POST",
+							headers: { "Content-type": "application/json" },
+							body: JSON.stringify({ username, password, emailAddress})
+						});
+          const data = await res.json().catch(() => ({}));
+          if(res.ok){
+            alert("Cuenta creada con éxito 🎉 Ahora inicia sesión.");
+
+            // ✅ Activar tab de Login
+            const loginTab = document.querySelector(".tab-item:first-child"); // primer tab = Login
+            const loginForm = document.getElementById("login");
+
+            // Quitar active de todos los tabs y forms
+             document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".form-content").forEach(f => f.classList.remove("active"));
+
+            // Activar login
+            if (loginTab) loginTab.classList.add("active");
+            if (loginForm) loginForm.classList.add("active");
+            const loginUsernameInput = login_form.querySelector("#username")
+            if(loginUsernameInput) loginUsernameInput.value = username
+          }else{
+            console.error('Signup error:', data.message || data || res.statusText);
+						alert(data.message || 'Error creating account');
+          }
+        }catch(err){
+          console.error(err);
+					alert('Could not connect to backend.');
+        }
+      })
+    }
+
+    login_form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(login_form);
+        const body = {
+          username: formData.get("username"),
+          password: formData.get("password"),
+        };
+
+        if (!body.username || !body.password) {
+          alert("Please, Insert username and password");
+          return;
+        }
+
+        try {
+          const res = await fetch("http://localhost:3000/users/login", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            alert(data.message || "Login OK");
+            window.location.href = "/chatRooms";
+          } else {
+            alert(data.message || `Error: ${res.status}`);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error connection");
+        }
+    });
+
   });
+
+
 </script>
