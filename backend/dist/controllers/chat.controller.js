@@ -1,1 +1,74 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const room_model_1 = require("../models/room.model");
+const chat_model_1 = require("../models/chat.model");
+const DUMMY_USER_ID = 'dummyUserId';
+// Get chatrooms for a user (Contact List)
+const getUserChatRooms = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // const userId = req.user.id as string  // set authMiddleware
+        const userId = DUMMY_USER_ID;
+        const keyword = req.query.q;
+        let rooms = yield room_model_1.Room.find({ users: userId }).sort({ updatedAt: -1 }).lean();
+        // latestMessage
+        for (let room of rooms) {
+            const latestChat = yield chat_model_1.Chat.findOne({ roomId: room._id }).sort({ createdAt: -1 }).lean();
+            room.latestMessage = latestChat ? latestChat.message : '';
+        }
+        // search
+        if (keyword) {
+            rooms = rooms.filter((room) => (room.name && room.name.toLowerCase().includes(keyword.toLowerCase())) ||
+                (room.latestMessage && room.latestMessage.toLowerCase().includes(keyword.toLowerCase())));
+        }
+        res.status(200).json(rooms);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to get chat rooms' });
+    }
+});
+// Create a new chatroom (or return existing one)
+const createChatRoom = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // const userA = req.user.id
+        const userA = DUMMY_USER_ID;
+        const { userB } = req.body;
+        if (!userB)
+            return res.status(400).json({ error: 'Recipient userId required' });
+        let room = yield room_model_1.Room.findOne({ users: { $all: [userA, userB] } });
+        if (!room) {
+            room = new room_model_1.Room({ users: [userA, userB] });
+            yield room.save();
+        }
+        res.status(200).json(room);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to create chat room' });
+    }
+});
+// Get messages for a specific room
+const getMessagesByRoom = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { roomId } = req.params;
+        const messages = yield chat_model_1.Chat.find({ roomId }).sort({ createdAt: 1 });
+        res.status(200).json(messages);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Error fetching messages' });
+    }
+});
+exports.default = {
+    getUserChatRooms,
+    createChatRoom,
+    getMessagesByRoom,
+};

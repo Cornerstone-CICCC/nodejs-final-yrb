@@ -10,8 +10,8 @@ const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cookie_session_1 = __importDefault(require("cookie-session"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
-// import chatRouter from './routes/chat.routes'
-// import chatSocket from './sockets/chat.socket'
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
+const chat_socket_1 = __importDefault(require("./sockets/chat.socket"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // Create server
@@ -34,7 +34,7 @@ app.use((0, cookie_session_1.default)({
 app.use(express_1.default.json());
 // Routes
 app.use("/users", user_routes_1.default);
-// app.use("/chats", chatRouter);
+app.use('/chat', chat_routes_1.default);
 // Create HTTP server and attach SocketIO
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {
@@ -50,7 +50,7 @@ mongoose_1.default
     .then(() => {
     console.log("Connected to MongoDB database");
     // Start Socket.IO
-    // chatSocket(io);
+    (0, chat_socket_1.default)(io);
     // Start the server
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {

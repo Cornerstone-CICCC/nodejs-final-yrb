@@ -5,8 +5,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 import cookieSession from "cookie-session";
 import userRouter from "./routes/user.routes";
-// import chatRouter from './routes/chat.routes'
-// import chatSocket from './sockets/chat.socket'
+import chatRouter from './routes/chat.routes';
+import chatSocket from './sockets/chat.socket';
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -39,7 +39,7 @@ app.use(express.json());
 
 // Routes
 app.use("/users", userRouter);
-// app.use("/chats", chatRouter);
+app.use('/chat', chatRouter);
 
 // Create HTTP server and attach SocketIO
 const server = createServer(app);
@@ -58,7 +58,7 @@ mongoose
     console.log("Connected to MongoDB database");
 
     // Start Socket.IO
-    // chatSocket(io);
+    chatSocket(io);
 
     // Start the server
     const PORT = process.env.PORT || 3000;
