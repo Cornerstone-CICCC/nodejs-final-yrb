@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const chat_model_1 = require("../models/chat.model");
+const user_model_1 = require("../models/user.model");
 const setupChatSocket = (io) => {
     io.on('connection', (socket) => {
         // On connect
@@ -56,16 +57,21 @@ const setupChatSocket = (io) => {
         }));
         // Postmessage
         socket.on('sendMessage', (data) => __awaiter(void 0, void 0, void 0, function* () {
-            const { roomId, username, message } = data;
-            try {
-                // Save message in MongoDB
-                const chat = new chat_model_1.Chat({ roomId, username, message });
-                yield chat.save();
-                io.to(roomId).emit('newMessage', chat);
-            }
-            catch (err) {
-                console.error('Error saving chat:', err);
-            }
+            const { roomId, message } = data;
+            const userId = socket.request.session.userId;
+            if (!userId)
+                return;
+            const user = yield user_model_1.User.findById(userId);
+            if (!user)
+                return;
+            // Save message in MongoDB
+            const chat = new chat_model_1.Chat({
+                roomId,
+                username: user.username,
+                message
+            });
+            yield chat.save();
+            io.to(roomId).emit('newMessage', chat);
         }));
         // Disconnect
         socket.on('disconnect', () => {

@@ -1,18 +1,17 @@
 import express from 'express'
 import chatController from '../controllers/chat.controller'
-// import authMiddleware from '../middleware/auth.middleware'
+import { checkLogin } from '../middleware/auth.middleware'
 
 const chatRouter = express.Router()
 
-// chatRouter.use(authMiddleware);
 
 // get contact list
-chatRouter.get('/', chatController.getUserChatRooms);
+chatRouter.get('/', checkLogin, chatController.getUserChatRooms);
 
 // create new chat group
-chatRouter.post('/', chatController.createChatRoom);
+chatRouter.post('/', checkLogin, chatController.createChatRoom);
 
 // get all message in a room
-chatRouter.get('/messages/:roomId', chatController.getMessagesByRoom);
+chatRouter.get('/messages/:roomId', checkLogin, chatController.getMessagesByRoom);
 
 export default chatRouter;
