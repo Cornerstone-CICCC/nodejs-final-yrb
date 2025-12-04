@@ -383,10 +383,10 @@ body {
 }
 
 .add-new-container {
-  position: fixed;          /* se queda fijo en pantalla */
-  bottom: 20px;             /* separación desde abajo */
-  right: 20px;              /* separación desde la derecha */
-  z-index: 1000;            /* siempre encima del contenido */
+  position: fixed;         
+  bottom: 20px;            
+  right: 20px;              
+  z-index: 1000;            
 }
 
 .add-new-btn {
