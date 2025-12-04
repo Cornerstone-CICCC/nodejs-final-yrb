@@ -115,7 +115,7 @@ import "../styles/global.css"
         const password = String(formData.get('new-password') || '').trim();
 
         if (!username || !password || !emailAddress) {
-          alert("Por favor completa todos los campos");
+          alert("Please completed all fields");
           return;
         }
 
@@ -127,17 +127,14 @@ import "../styles/global.css"
 						});
           const data = await res.json().catch(() => ({}));
           if(res.ok){
-            alert("Cuenta creada con éxito 🎉 Ahora inicia sesión.");
+            alert("Account was created.");
 
-            // ✅ Activar tab de Login
-            const loginTab = document.querySelector(".tab-item:first-child"); // primer tab = Login
+            const loginTab = document.querySelector(".tab-item:first-child"); 
             const loginForm = document.getElementById("login");
 
-            // Quitar active de todos los tabs y forms
              document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
             document.querySelectorAll(".form-content").forEach(f => f.classList.remove("active"));
 
-            // Activar login
             if (loginTab) loginTab.classList.add("active");
             if (loginForm) loginForm.classList.add("active");
             const loginUsernameInput = login_form.querySelector("#username")
@@ -177,7 +174,7 @@ import "../styles/global.css"
           const data = await res.json();
           if (res.ok) {
             alert(data.message || "Login OK");
-            window.location.href = "/chatRooms";
+            window.location.href = "/chats";
           } else {
             alert(data.message || `Error: ${res.status}`);
           }
