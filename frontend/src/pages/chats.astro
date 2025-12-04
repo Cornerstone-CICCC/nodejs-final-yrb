@@ -1,0 +1,37 @@
+---
+import Layout from "../layouts/Layout.astro"
+import "../styles/global.css"
+---
+
+<Layout>
+    <section class="chats-content">
+        <div class="search-chats">
+            <div class="profile-chats">
+                <h2>CHAT APP</h2>
+                <img src="../images/user_icon.svg" alt="" class="profile-btn">
+            </div>
+            <div class="search-content">      
+                <img src="../images/search_icon.svg" alt="Search Icon">
+                <input type="text" placeholder="Search" class="search-bar"> 
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="chats-container">
+            <ul>
+                <li>
+                    <img src="../images/user_icon.svg" alt="User Icon">
+                    <div>
+                        <h3 class="title_user">User Person</h3>
+                        <p class="details-chat">Lorem ipsum dolor sit amet consectetur adipisicing elit. Odit praesentium distinctio itaque dicta quas sed error nobis provident maxime. Facere iusto eveniet cumque. Repudiandae labore, molestias unde voluptas iure nihil?</p>
+                    </div>
+                    <div>
+                        <span class="time">10 min</span>
+                        <span class="badge">2</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+    </section>
+</Layout>

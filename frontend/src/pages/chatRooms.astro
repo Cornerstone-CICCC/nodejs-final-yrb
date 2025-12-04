@@ -1,0 +1,29 @@
+---
+import Layout from "../layouts/Layout.astro"
+import "../styles/global.css"
+---
+
+<Layout>
+    <section class="join-header">        
+        <button class="back-btn">←</button>
+        <h3>Join Room</h3>        
+    </section>
+
+    <section class="create-chat">
+        <h2>CHAT ROOMS</h2>
+        <button class="create-btn">+ Create new Chat</button>
+    </section>
+
+    <section class="existings-chat">
+        <h3>EXISTING CHATS</h3>
+        <ul class="chat-list">
+            <li class="chat-item">
+                <div class="chat-info">
+                    <img src="../images/user_icon.svg" alt="User" class="chat-avatar">
+                    <h4>Username</h4>
+                </div>
+                <button class="join-btn">+ Join</button>
+            </li>
+        </ul>
+    </section>
+</Layout>
