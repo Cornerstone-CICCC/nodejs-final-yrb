@@ -41,22 +41,23 @@ const getUserChatRooms = async (req: Request, res: Response) => {
 // Create a new chatroom (or return existing one)
 const createChatRoom = async (req: Request, res: Response) => {
   try {
+    if(!req.session || !req.session.userId){
+      return res.status(401).json({ error: "User not authenticated" })
+    }
     const userA = req.session.userId
     // const userA = DUMMY_USER_ID
-    if(!userA) return res.status(401).json({ error: "User not authenticated."})
     
-    const { userB } = req.body
-    if (!userB) return res.status(400).json({ error: 'Recipient userId required' });
+    const { usernameB } = req.body
+    if (!usernameB) return res.status(400).json({ error: 'Recipient username required' });
 
     // check if userB exists
-    const targetUser = await User.findById(userB)
-    if(!targetUser){
-      return res.status(400).json({ error: "User does not exist"})
-    }
+    const userB = await User.findOne({ username: usernameB })
+    if(!userB) return res.status(400).json({ error: "User does not exist" })
 
-    let room = await Room.findOne({ users: { $all: [userA, userB] } });
+
+    let room = await Room.findOne({ users: { $all: [userA, userB._id] } });
     if (!room) {
-      room = new Room({ users: [userA, userB] });
+      room = new Room({ users: [userA, userB._id] });
       await room.save();
     }
 
@@ -79,7 +80,7 @@ const getMessagesByRoom = async (req: Request, res: Response) => {
     // check if user is a member of room
     const room = await Room.findById(roomId)
     if(!room) return res.status(404).json({ message: "Room not found"})
-    if(!room.users.includes(userId)){
+    if(!room.users.map(id => id.toString()).includes(userId)){
       return res.status(403).json({ error: "You are not a member of this room" })
     }
 
