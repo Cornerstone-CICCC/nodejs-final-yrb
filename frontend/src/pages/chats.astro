@@ -8,7 +8,12 @@ import "../styles/global.css"
         <div class="search-chats">
             <div class="profile-chats">
                 <h2>CHAT APP</h2>
-                <img src="../images/user_icon.svg" alt="" class="profile-btn">
+                <button class="profile-btn">
+                    <img src="../images/user_icon.svg" alt="" >
+                </button>
+                <button class="logout-btn" id="logoutBtn">
+                    <img src="../images/logout_icon.svg" alt="Logout Icon">
+                </button> 
             </div>
             <div class="search-content">      
                 <img src="../images/search_icon.svg" alt="Search Icon">
@@ -19,23 +24,296 @@ import "../styles/global.css"
     <section>
         <div class="chats-container">
             <ul class="user-card">
-                <li>
-                    <img src="../images/user_icon.svg" alt="User Icon">
-                    <div>
-                        <h3 class="title_user">User Person</h3>
-                        <p class="details-chat">Lorem ipsum dolor sit amet consectetur adipisicing elit. Odit praesentium distinctio itaque dicta quas sed error nobis provident maxime. Facere iusto eveniet cumque. Repudiandae labore, molestias unde voluptas iure nihil?</p>
-                    </div>
-                    <div>
-                        <span class="time">10 min</span>
-                        <span class="badge">2</span>
-                    </div>
-                </li>
+
             </ul>
         </div>
     </section>
     <div class="add-new-container">
-        <button class="add-new-btn">
+        <button class="add-new-btn" id="openModal">
             <img src="../images/add_icon.svg" alt="Add Icon">
         </button>
     </div>
+    <!-- Modal-->
+    <div class="modal" id="newChatModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2 class="title-new-chat">New Chat</h2>
+            <form id="newChatForm">
+                <fieldset class="input-group" id="input-new-chat">
+                    <legend>Username</legend>
+                    <input type="text" id="usernameChat" placeholder="Username..." required />
+                </fieldset>
+            <button type="submit" class="create-btn">Create</button>
+            </form>
+        </div>
+    </div>
+
+        <!-- Modal de perfil -->
+        <div class="modal" id="profileModal">
+            <div class="modal-content profile-modal">
+                <span class="close-btn" id="closeProfile">&times;</span>
+                <h2 class="profile_title">Profile</h2>
+
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar">
+                        <img id="avatarImage" src="../images/user_icon.svg" alt="Avatar" />
+                        <button type="button" class="change-photo-btn" id="changePhotoBtn" aria-label="Cambiar foto de perfil">
+                            <img src="../images/profile_icon.svg" alt="Cambiar foto" width="20" height="20" />
+                        </button>
+                        <input type="file" id="uploadPhoto" accept="image/*" style="display:none" />
+                    </div>
+                </div>
+
+
+                <form id="profileForm" class="login-form">
+                    <fieldset class="edit-group">
+                        <legend>Username</legend>
+                        <div class="input-wrapper">
+                        <img src="../images/user_icon.svg" alt="User Icon">
+                        <input type="text" id="edit-username" placeholder="Enter Username..." required />
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="edit-group">
+                        <legend>Email</legend>
+                        <div class="input-wrapper">
+                        <img src="../images/email_icon.svg" alt="Email Icon">
+                        <input type="email" id="edit-email" placeholder="Enter Email..." required />
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="edit-group">
+                        <legend>Password</legend>
+                        <div class="input-wrapper">
+                        <img src="../images/pass_icon.svg" alt="Pass Icon">
+                        <input type="password" id="edit-password" placeholder="Create Password..." required />
+                        </div>
+                    </fieldset>
+
+                    <button type="submit" class="edit-btn">
+                        <img src="../images/edit_icon.svg" alt="Edit Icon" />
+                        Edit
+                    </button>
+                </form>
+            </div>
+        </div>
+
 </Layout>
+
+<script is:inline>  
+    document.addEventListener("DOMContentLoaded", async () => {
+
+
+        /** Chats List */
+        const userCardList = document.querySelector(".user-card");
+
+        try {
+            const res = await fetch("http://localhost:3000/chat", {
+            method: "GET",
+            credentials: "include"
+            });
+
+            const rooms = await res.json();
+
+            if (res.ok) {
+            userCardList.innerHTML = ""; 
+
+            rooms.forEach(room => {
+                const li = document.createElement("li");
+                 li.innerHTML = `
+                    <img src="../images/user_icon.svg" alt="User Icon">
+                    <div>
+                        <h3 class="title_user">${room.name || room.users.map(u => u.username || u).join(" & ")}</h3>
+                        <p class="details-chat">${room.latestMessage || "No messages"}</p>
+                    </div>
+                    <div>
+                        <span class="time">${new Date(room.updatedAt).toLocaleTimeString()}</span>
+                        <span class="badge">${room.unreadCount || 0}</span>
+                    </div>
+                    `;
+                userCardList.appendChild(li);
+            });
+            } else {
+            alert(rooms.error || "Charging chats error");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Connection error");
+        }
+
+
+        /**Modal Create new Chat */
+        const form = document.getElementById("newChatForm");
+        const modal = document.getElementById("newChatModal");
+        const openBtn = document.getElementById("openModal");
+        const closeBtn = document.getElementById("closeModal");
+
+        openBtn.addEventListener("click", () => modal.style.display = "flex");
+        closeBtn.addEventListener("click", () => modal.style.display = "none");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const userB = document.getElementById("usernameChat").value.trim();
+
+        if (!userB) {
+            alert("Add a username to create the chat");
+        return;
+        }
+
+        try {
+        const res = await fetch("http://localhost:3000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userB }),
+        });
+
+        const room = await res.json();
+
+        if (res.ok) {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                <img src="../images/user_icon.svg" alt="User Icon">
+                <div>
+                    <h3 class="title_user">${room.users.map(u => u.username || u).join(" & ")}</h3>
+                    <p class="details-chat">New char with: ${room.user.username}</p>
+                </div>
+                <div>
+                    <span class="time">just now</span>
+                    <span class="badge">0</span>
+                </div>
+                `;
+                userCardList.appendChild(li);
+
+                alert("New chat created");
+                form.reset();
+                modal.style.display = "none";
+        } else {
+                alert(room.error || "Error to created a new chat");
+        }} catch (err) {
+            console.error(err);
+            alert("Connection error");
+        }
+        });
+
+        /** Modal Profile Edit */
+        const openProfileBtn = document.querySelector(".profile-btn");
+        const closeProfileBtn = document.getElementById("closeProfile");
+        const modalProfile = document.getElementById("profileModal");
+        openProfileBtn.addEventListener("click", async () => {
+            modalProfile.style.display = "flex";
+            try{
+                const res = await fetch("http://localhost:3000/users/account",{
+                    method: "GET",
+                    credentials: "include"
+                });
+                const data = await res.json();
+                if(res.ok){
+                    document.getElementById("edit-username").value = data.user.username || "";
+                    document.getElementById("edit-email").value = data.user.email || "";
+                }else{
+                    alert(data.message || "Error to charge the profile")
+                }
+            }catch(err){
+                console.error("Error fetching account",err);
+                alert("Connection error")
+            }
+        });
+         closeProfileBtn.addEventListener("click", () => {
+            modalProfile.style.display = "none"; 
+        });
+
+        window.addEventListener("click", (e) => {
+            if (e.target === modalProfile) {
+            modalProfile.style.display = "none"; 
+            }
+        });
+
+        const profileForm = document.getElementById("profileForm");
+        profileForm.addEventListener("submit", async (e) =>{
+            e.preventDefault();
+            const body = {
+                username: document.getElementById("edit-username").value.trim(),
+                email: document.getElementById("edit-email").value.trim(),
+                password: document.getElementById("edit-password").value.trim(),
+            };
+             try {
+                const res = await fetch("http://localhost:3000/users/change", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Profile updated 🎉");
+                    modalProfile.style.display = "none";
+                } else {
+                    alert(data.message || "Error updated Profile");
+                }
+                }catch(err){
+                    console.error(err);
+                    alert("Connection error");
+                }
+            }
+        )
+        /** Add profile photo */
+        const changeBtn = document.getElementById("changePhotoBtn");
+        const uploadInput = document.getElementById("uploadPhoto");
+        const avatarImage = document.getElementById("avatarImage");
+            
+        changeBtn.addEventListener("click", () => {
+            uploadInput.click();
+        });
+        uploadInput.addEventListener("change", async () => {
+            const file = uploadInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("photo", file);
+
+            try {
+            const res = await fetch("http://localhost:3000/users/photo", {
+                method: "POST",
+                credentials: "include", 
+                body: formData,
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                alert("Photo Profile updated 🎉");
+                avatarImage.src = data.photoUrl;
+            } else {
+                alert(data.message || "Error updated new photo");
+            }
+            } catch (err) {
+            console.error(err);
+            alert("Connection error");
+            }
+        });
+
+
+        /**Log out */
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        logoutBtn.addEventListener("click", async () => {
+            try {
+            const res = await fetch("http://localhost:3000/users/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                window.location.href = "/"; 
+            } else {
+                alert(data.message || "Error to close session");
+            }
+            } catch (err) {
+            console.error(err);
+            alert("Connection error");
+            }
+        });
+    });
+
+</script>
