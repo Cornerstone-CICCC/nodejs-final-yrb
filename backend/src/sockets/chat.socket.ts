@@ -26,7 +26,7 @@ const setupChatSocket = (io: Server) => {
 
           const previousMessages = await Chat.find({ roomId: new mongoose.Types.ObjectId(roomId) })
             .sort({ createdAt: 1 })
-            .lean();
+            .lean()
           socket.emit('previousMessages', { roomId, messages: previousMessages });
         }
       } catch(err){
@@ -50,23 +50,22 @@ const setupChatSocket = (io: Server) => {
 
     // Postmessage
     socket.on('sendMessage', async (data) => {
-      const { roomId, message } = data
+      const { roomId, message, userId } = data
 
-      const userId = (socket.request as any).session.userId
-      if(!userId) return
+      if(!userId){
+        console.error("userId is missing")
+        return
+      }
 
-      const user = await User.findById(userId)
-      if(!user) return
+      if (!roomId || !mongoose.Types.ObjectId.isValid(roomId)) {
+        console.error("Invalid roomId:", roomId)
+        return
+      }
 
       // Save message in MongoDB
-      const chat = new Chat({
-        roomId,
-        username: user.username,
-        message
-      })
-
-      await chat.save()
-      io.to(roomId).emit('newMessage', chat)
+      const chat = await Chat.create({ roomId, message, userId })
+      const populatedChat = await chat.populate('userId', 'username');
+      io.to(roomId).emit("newMessage", populatedChat);
     })
 
     // Disconnect

@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const chat_model_1 = require("../models/chat.model");
-const user_model_1 = require("../models/user.model");
 const setupChatSocket = (io) => {
     io.on('connection', (socket) => {
         // On connect
@@ -57,21 +56,19 @@ const setupChatSocket = (io) => {
         }));
         // Postmessage
         socket.on('sendMessage', (data) => __awaiter(void 0, void 0, void 0, function* () {
-            const { roomId, message } = data;
-            const userId = socket.request.session.userId;
-            if (!userId)
+            const { roomId, message, userId } = data;
+            if (!userId) {
+                console.error("userId is missing");
                 return;
-            const user = yield user_model_1.User.findById(userId);
-            if (!user)
+            }
+            if (!roomId || !mongoose_1.default.Types.ObjectId.isValid(roomId)) {
+                console.error("Invalid roomId:", roomId);
                 return;
+            }
             // Save message in MongoDB
-            const chat = new chat_model_1.Chat({
-                roomId,
-                username: user.username,
-                message
-            });
-            yield chat.save();
-            io.to(roomId).emit('newMessage', chat);
+            const chat = yield chat_model_1.Chat.create({ roomId, message, userId });
+            const populatedChat = yield chat.populate('userId', 'username');
+            io.to(roomId).emit("newMessage", populatedChat);
         }));
         // Disconnect
         socket.on('disconnect', () => {
