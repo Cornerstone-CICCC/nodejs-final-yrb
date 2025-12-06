@@ -164,6 +164,7 @@ import "../styles/global.css"
         const res = await fetch("http://localhost:3000/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ userB }),
         });
 
@@ -171,11 +172,12 @@ import "../styles/global.css"
 
         if (res.ok) {
                 const li = document.createElement("li");
+                const usernames = room.users.map(u => u.username).join(" & ");
                 li.innerHTML = `
                 <img src="../images/user_icon.svg" alt="User Icon">
                 <div>
-                    <h3 class="title_user">${room.users.map(u => u.username || u).join(" & ")}</h3>
-                    <p class="details-chat">New char with: ${room.user.username}</p>
+                    <h3 class="title_user">${usernames}</h3>
+                    <p class="details-chat">New char with: ${room.otherUsernames}</p>
                 </div>
                 <div>
                     <span class="time">just now</span>

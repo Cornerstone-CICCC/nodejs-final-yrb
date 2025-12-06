@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-const RoomSchema = new mongoose.Schema({
-  users: [{ type: String, required: true }],
+const RoomSchema = new Schema({
+  users: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
   name: { type: String },
   latestMessage: { type: String },
   createdAt: { type: Date },
