@@ -21,7 +21,7 @@ import "../styles/global.css"
             </div>
         </div>
     </section>
-    <section>
+    <section class="chats-section">
         <div class="chats-container">
             <ul class="user-card">
 
@@ -40,8 +40,8 @@ import "../styles/global.css"
             <h2 class="title-new-chat">New Chat</h2>
             <form id="newChatForm">
                 <fieldset class="input-group" id="input-new-chat">
-                    <legend>Username</legend>
-                    <input type="text" id="usernameChat" placeholder="Username..." required />
+                    <legend>New Contact</legend>
+                    <input type="text" id="usernameChat" placeholder="Enter a Username..." required />
                 </fieldset>
             <button type="submit" class="create-btn">Create</button>
             </form>
@@ -114,7 +114,7 @@ import "../styles/global.css"
             });
 
             const rooms = await res.json();
-
+            console.log(rooms)
             if (res.ok) {
             userCardList.innerHTML = ""; 
 
@@ -131,6 +131,11 @@ import "../styles/global.css"
                         <span class="badge">${room.unreadCount || 0}</span>
                     </div>
                     `;
+
+                 li.addEventListener("click", () => {
+                    window.location.href = `/detailChat.html?roomId=${room._id}`;
+                    localStorage.setItem("currentUserId", room.name);
+                });
                 userCardList.appendChild(li);
             });
             } else {
@@ -152,16 +157,27 @@ import "../styles/global.css"
         closeBtn.addEventListener("click", () => modal.style.display = "none");
 
         form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const userB = document.getElementById("usernameChat").value.trim();
+        e.preventDefault();
+        const usernameB = document.getElementById("usernameChat").value.trim();
 
-        if (!userB) {
+        if (!usernameB) {
             alert("Add a username to create the chat");
-        return;
+            return;
+        }
+
+        // 🔎 Validar si ya existe un chat con ese usuario
+        const exists = Array.from(userCardList.children).some(li => {
+            const title = li.querySelector(".title_user")?.textContent || "";
+            return title.includes(usernameB);
+        });
+
+        if (exists) {
+            alert("Ya existe un chat con ese usuario");
+            return;
         }
 
         try {
-        const res = await fetch("http://localhost:3000/chat", {
+            const res = await fetch("http://localhost:3000/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -180,22 +196,24 @@ import "../styles/global.css"
                     <p class="details-chat">New char with: ${room.otherUsernames}</p>
                 </div>
                 <div>
-                    <span class="time">just now</span>
-                    <span class="badge">0</span>
+                <span class="time">just now</span>
+                <span class="badge">0</span>
                 </div>
-                `;
-                userCardList.appendChild(li);
+            `;
+            userCardList.appendChild(li);
 
-                alert("New chat created");
-                form.reset();
-                modal.style.display = "none";
-        } else {
-                alert(room.error || "Error to created a new chat");
-        }} catch (err) {
+            alert("New chat created");
+            form.reset();
+            modal.style.display = "none";
+            } else {
+            alert(room.error || "Error creating new chat");
+            }
+        } catch (err) {
             console.error(err);
             alert("Connection error");
         }
         });
+
 
         /** Modal Profile Edit */
         const openProfileBtn = document.querySelector(".profile-btn");
@@ -316,6 +334,25 @@ import "../styles/global.css"
             alert("Connection error");
             }
         });
+
+
+        /**Search bar */
+        const searchBar = document.querySelector(".search-bar");
+
+        searchBar.addEventListener("input",()=>{
+            const query = searchBar.value.toLowerCase();
+
+            Array.from(userCardList.children).forEach(li=>{
+                const usernameSearch = li.querySelector(".title_user")?.textContent.toLowerCase() || "";
+
+                if(usernameSearch.includes(query)){
+                    li.style.display = "flex"
+                }else{
+                    li.style.display = "none"
+                }
+            })
+        })
+
     });
 
 </script>
