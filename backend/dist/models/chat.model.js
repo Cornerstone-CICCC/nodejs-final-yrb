@@ -7,7 +7,7 @@ exports.Chat = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const ChatSchema = new mongoose_1.default.Schema({
     roomId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Room', required: true },
-    username: { type: String, required: true },
+    userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'User', required: true },
     message: { type: String, required: true },
 }, { timestamps: true });
 exports.Chat = mongoose_1.default.model('Chat', ChatSchema);
