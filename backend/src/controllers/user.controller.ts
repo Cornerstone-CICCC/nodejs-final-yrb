@@ -96,13 +96,13 @@ export const getAccount = async (req: Request, res: Response) => {
  * Logout
  */
 export const logout = (req: Request, res: Response) => {
-  if (req.session) {
-    req.session.userId = undefined;
-    req.session.isLoggedIn = false;
-  }
+  if (req.session) (req.session as any) = null;
   res.status(200).json({ message: "Logout successful!" });
 };
 
+/**
+ * Change password
+ */
 export const changePassword = async (req: Request, res: Response) => {
   try {
     const userId = req.session?.userId;
@@ -137,34 +137,10 @@ export const changePassword = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Change password
- */
-export const deleteAccount = async (req: Request, res: Response) => {
-  try {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ message: "Login required" });
-
-    const user = await User.findByIdAndDelete(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (req.session) {
-      req.session.userId = undefined;
-      req.session.isLoggedIn = false;
-    }
-
-    res.json({ message: "Account deleted successfully" });
-  } catch (err) {
-    console.error("Delete account error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 export default {
   signup,
   login,
   getAccount,
   logout,
   changePassword,
-  deleteAccount,
 };
