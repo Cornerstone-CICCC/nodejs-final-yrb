@@ -8,10 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const room_model_1 = require("../models/room.model");
 const chat_model_1 = require("../models/chat.model");
 const user_model_1 = require("../models/user.model");
+const mongoose_1 = __importDefault(require("mongoose"));
 // const DUMMY_USER_ID = 'dummyUserId';
 // Get chatrooms for a user (Contact List)
 const getUserChatRooms = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -20,14 +24,18 @@ const getUserChatRooms = (req, res) => __awaiter(void 0, void 0, void 0, functio
         // const userId = DUMMY_USER_ID
         if (!userId)
             return res.status(401).json({ error: "User not authenticated." });
-        const keyword = req.query.q;
-        let rooms = yield room_model_1.Room.find({ users: userId }).sort({ updatedAt: -1 }).lean();
+        const mongoUserId = new mongoose_1.default.Types.ObjectId(userId);
+        let rooms = yield room_model_1.Room.find({ users: mongoUserId })
+            .populate('users', 'username')
+            .sort({ updatedAt: -1 })
+            .lean();
         // latestMessage
         for (let room of rooms) {
             const latestChat = yield chat_model_1.Chat.findOne({ roomId: room._id }).sort({ createdAt: -1 }).lean();
             room.latestMessage = latestChat ? latestChat.message : '';
         }
         // search
+        const keyword = req.query.q;
         if (keyword) {
             rooms = rooms.filter((room) => (room.name && room.name.toLowerCase().includes(keyword.toLowerCase())) ||
                 (room.latestMessage && room.latestMessage.toLowerCase().includes(keyword.toLowerCase())));
@@ -47,19 +55,38 @@ const createChatRoom = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const userA = req.session.userId;
         // const userA = DUMMY_USER_ID
-        const { usernameB } = req.body;
-        if (!usernameB)
+        const { userB } = req.body;
+        if (!userB)
             return res.status(400).json({ error: 'Recipient username required' });
         // check if userB exists
-        const userB = yield user_model_1.User.findOne({ username: usernameB });
-        if (!userB)
+        const userBObj = yield user_model_1.User.findOne({ username: userB });
+        if (!userBObj)
             return res.status(400).json({ error: "User does not exist" });
-        let room = yield room_model_1.Room.findOne({ users: { $all: [userA, userB._id] } });
+        let room = yield room_model_1.Room.findOne({
+            users: { $all: [new mongoose_1.default.Types.ObjectId(userA), userBObj._id] }
+        });
         if (!room) {
-            room = new room_model_1.Room({ users: [userA, userB._id] });
+            room = new room_model_1.Room({
+                users: [
+                    new mongoose_1.default.Types.ObjectId(userA),
+                    userBObj._id
+                ]
+            });
             yield room.save();
         }
-        res.status(200).json(room);
+        const populatedRoom = yield room_model_1.Room.findById(room._id)
+            .populate('users', 'username')
+            .lean()
+            .exec();
+        if (!populatedRoom) {
+            return res.status(500).json({ error: "Failed to create chat room" });
+        }
+        const userAId = req.session.userId;
+        const otherUsernames = populatedRoom.users
+            .filter((u) => u._id.toString() !== userAId)
+            .map((u) => u.username)
+            .join(" & ");
+        res.status(200).json(Object.assign(Object.assign({}, populatedRoom), { otherUsernames }));
     }
     catch (err) {
         console.error(err);

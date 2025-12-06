@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { Room } from '../models/room.model'
 import { Chat } from '../models/chat.model'
 import { User } from '../models/user.model'
+import mongoose from 'mongoose'
 
 // const DUMMY_USER_ID = 'dummyUserId';
 
@@ -11,9 +12,12 @@ const getUserChatRooms = async (req: Request, res: Response) => {
     const userId = req.session.userId
     // const userId = DUMMY_USER_ID
     if(!userId) return res.status(401).json({ error: "User not authenticated."})
-    
-    const keyword = req.query.q as string | undefined;
-    let rooms = await Room.find({ users: userId }).sort({ updatedAt: -1 }).lean();
+
+    const mongoUserId = new mongoose.Types.ObjectId(userId)
+    let rooms = await Room.find({ users: mongoUserId })
+    .populate('users', 'username')
+    .sort({ updatedAt: -1 })
+    .lean();
 
     // latestMessage
     for (let room of rooms) {
@@ -22,6 +26,7 @@ const getUserChatRooms = async (req: Request, res: Response) => {
     }
 
     // search
+    const keyword = req.query.q as string | undefined;
     if (keyword) {
       rooms = rooms.filter(
         (room) =>
@@ -47,21 +52,44 @@ const createChatRoom = async (req: Request, res: Response) => {
     const userA = req.session.userId
     // const userA = DUMMY_USER_ID
     
-    const { usernameB } = req.body
-    if (!usernameB) return res.status(400).json({ error: 'Recipient username required' });
+    const { userB } = req.body
+    if (!userB) return res.status(400).json({ error: 'Recipient username required' });
 
     // check if userB exists
-    const userB = await User.findOne({ username: usernameB })
-    if(!userB) return res.status(400).json({ error: "User does not exist" })
+    const userBObj = await User.findOne({ username: userB })
+    if(!userBObj) return res.status(400).json({ error: "User does not exist" })
 
 
-    let room = await Room.findOne({ users: { $all: [userA, userB._id] } });
+    let room = await Room.findOne({
+      users: { $all: [new mongoose.Types.ObjectId(userA), userBObj._id] } });
     if (!room) {
-      room = new Room({ users: [userA, userB._id] });
+      room = new Room({
+        users: [
+          new mongoose.Types.ObjectId(userA),
+          userBObj._id
+        ]
+      });
       await room.save();
     }
 
-    res.status(200).json(room);
+    const populatedRoom = await Room.findById(room._id)
+    .populate('users', 'username')
+    .lean()
+    .exec()
+    if(!populatedRoom){
+      return res.status(500).json({ error: "Failed to create chat room"})
+    }
+
+    const userAId = req.session.userId
+    const otherUsernames = populatedRoom.users
+    .filter((u: any) => u._id.toString() !== userAId)
+    .map((u: any) => u.username)
+    .join(" & ")
+
+    res.status(200).json({
+      ...populatedRoom,
+      otherUsernames
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create chat room' });
