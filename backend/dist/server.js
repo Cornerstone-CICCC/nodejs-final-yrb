@@ -30,11 +30,12 @@ app.use((0, cookie_session_1.default)({
     keys: [process.env.COOKIE_PRIMARY_KEY, process.env.COOKIE_SECONDARY_KEY],
     maxAge: 3 * 60 * 1000,
     sameSite: "lax",
+    secure: false,
 }));
 app.use(express_1.default.json());
 // Routes
 app.use("/users", user_routes_1.default);
-app.use('/chat', chat_routes_1.default);
+app.use("/chat", chat_routes_1.default);
 // Create HTTP server and attach SocketIO
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {

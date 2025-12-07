@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.logout = exports.getAccount = exports.login = exports.signup = void 0;
+exports.changePassword = exports.logout = exports.getAccount = exports.login = exports.setRobohashAvatar = exports.signup = void 0;
 const user_model_1 = require("../models/user.model");
 /**
  * Sign up (add user)
@@ -24,7 +24,8 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (existingEmail) {
             return res.status(400).json({ message: "Email already exists" });
         }
-        const newUser = yield user_model_1.User.create({ username, email, password });
+        const avatar = `https://robohash.org/${encodeURIComponent(email)}`;
+        const newUser = yield user_model_1.User.create({ username, email, password, avatar });
         if (req.session) {
             req.session.userId = newUser._id.toString();
             req.session.isLoggedIn = true;
@@ -35,6 +36,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 id: newUser._id,
                 username: newUser.username,
                 email: newUser.email,
+                avatar: newUser.avatar,
             },
         });
     }
@@ -44,6 +46,29 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.signup = signup;
+const setRobohashAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const userId = (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId;
+        if (!userId)
+            return res.status(401).json({ message: "Login required" });
+        const user = yield user_model_1.User.findById(userId);
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        const seed = encodeURIComponent(user.username || user._id.toString());
+        const avatarUrl = `https://robohash.org/${seed}`;
+        user.avatar = avatarUrl;
+        yield user.save();
+        return res
+            .status(200)
+            .json({ message: "Avatar updated", avatar: avatarUrl });
+    }
+    catch (err) {
+        console.error("Set Robohash avatar error:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+});
+exports.setRobohashAvatar = setRobohashAvatar;
 /**
  * Log in (check user)
  */
@@ -142,6 +167,7 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.changePassword = changePassword;
 exports.default = {
+    setRobohashAvatar: exports.setRobohashAvatar,
     signup: exports.signup,
     login: exports.login,
     getAccount: exports.getAccount,
