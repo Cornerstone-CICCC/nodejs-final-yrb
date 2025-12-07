@@ -1,0 +1,39 @@
+---
+import Layout from "../layouts/Layout.astro"
+import "../styles/global.css"
+---
+
+<Layout>
+    <section class="detail-header">        
+        <button class="back-btn">←</button>
+        <h3>Username</h3>        
+    </section>
+    <ul class="chat-list-detail">
+        <li class="message received">
+            <img src="../images/user_icon.svg" alt="Michael Avatar" class="avatar" />
+            <div class="bubble">
+                <p>Lorem Ipsum Dolor Sit Amet, Consectetur Adipisicing Elit...</p>
+                <span class="timestamp">10 AM</span>
+            </div>
+        </li>
+
+    <li class="message sent">
+      <div class="bubble">
+        <p>Sed Do Elusmod Tempor Incididunt Ut Labore Et Magna Aliqua...</p>
+        <span class="timestamp">10 AM</span>
+      </div>
+      <img src="../images/user_icon.svg" alt="My Avatar" class="avatar" />
+    </li>
+
+    <!-- Repetir según conversación -->
+  </ul>
+
+  <form class="chat-input-form">
+    <div class="message-input">
+        <input type="text" placeholder="Type message here..." />
+        <button type="submit">
+            <img src="../images/send_icon.svg" alt="Send" />
+        </button>
+    </div>
+  </form>
+</Layout>

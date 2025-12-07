@@ -17,7 +17,9 @@ export const signup = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    const newUser = await User.create({ username, email, password });
+    const avatar = `https://robohash.org/${encodeURIComponent(email)}`;
+
+    const newUser = await User.create({ username, email, password, avatar });
 
     if (req.session) {
       req.session.userId = newUser._id.toString();
@@ -30,11 +32,35 @@ export const signup = async (req: Request, res: Response) => {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
+        avatar: newUser.avatar,
       },
     });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const setRobohashAvatar = async (req: Request, res: Response) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ message: "Login required" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const seed = encodeURIComponent(user.username || user._id.toString());
+    const avatarUrl = `https://robohash.org/${seed}`;
+
+    user.avatar = avatarUrl;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Avatar updated", avatar: avatarUrl });
+  } catch (err) {
+    console.error("Set Robohash avatar error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -96,13 +122,13 @@ export const getAccount = async (req: Request, res: Response) => {
  * Logout
  */
 export const logout = (req: Request, res: Response) => {
-  if (req.session) {
-    req.session.userId = undefined;
-    req.session.isLoggedIn = false;
-  }
+  if (req.session) (req.session as any) = null;
   res.status(200).json({ message: "Logout successful!" });
 };
 
+/**
+ * Change password
+ */
 export const changePassword = async (req: Request, res: Response) => {
   try {
     const userId = req.session?.userId;
@@ -137,34 +163,11 @@ export const changePassword = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Change password
- */
-export const deleteAccount = async (req: Request, res: Response) => {
-  try {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ message: "Login required" });
-
-    const user = await User.findByIdAndDelete(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (req.session) {
-      req.session.userId = undefined;
-      req.session.isLoggedIn = false;
-    }
-
-    res.json({ message: "Account deleted successfully" });
-  } catch (err) {
-    console.error("Delete account error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 export default {
+  setRobohashAvatar,
   signup,
   login,
   getAccount,
   logout,
   changePassword,
-  deleteAccount,
 };

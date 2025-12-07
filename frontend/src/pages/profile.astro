@@ -1,0 +1,111 @@
+---
+import Layout from "../layouts/Layout.astro"
+import Header from "../components/Header.astro"
+import "../styles/global.css"
+---
+
+<Layout>
+    <Header></Header>
+    <section class="auth-section">
+        <h2 class="profile_title">Profile</h2>
+        <div class="profile-avatar-container">
+            <div class="profile-avatar">
+                <button type="button" class="change-photo-btn" aria-label="Cambiar foto de perfil">
+                <img src="../images/profile_icon.svg" alt="Cambiar foto" width="20" height="20" />
+                </button>
+            </div>
+        </div>
+        <form id="profile" class="login-form">
+            <fieldset class="edit-group">
+                <legend>Username</legend>
+                <div class="input-wrapper">
+                    <img src="../images/user_icon.svg" alt="User Icon">
+                    <input type="text" id="edit-username" placeholder="Enter Username..." required />
+                </div>
+            </fieldset>
+
+            <fieldset class="edit-group">
+                <legend>Email</legend>
+                <div class="input-wrapper">
+                <img src="../images/email_icon.svg" alt="User Icon">
+                <input type="email" id="edit-email" placeholder="Enter Email..." required />
+                </div>
+            </fieldset>
+
+            <fieldset class="edit-group">
+                <legend>Password</legend>
+                <div class="input-wrapper">
+                <img src="../images/pass_icon.svg" alt="Pass Icon"> 
+                <input type="password" id="edit-password" placeholder="Create Password..." required />
+                </div>
+            </fieldset>
+
+            <button type="submit" class="edit-btn">
+            <img src="../images/edit_icon.svg" alt="Sign Up Icon" />    
+                Edit</button>
+        </form>
+    </section>
+    
+</Layout>
+
+<style>
+ .profile_title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.profile-avatar-container {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid white;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+}
+
+.change-photo-btn {
+  position: absolute;
+  background: #8e44ad;
+  border: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 3px solid white;
+  z-index: 2;
+}
+
+.change-photo-btn:hover {
+  background: #732d91;
+  transform: scale(1.1);
+}
+
+.change-photo-btn img {
+  width: 100px;
+  height: 100px;
+  opacity: 1;
+  filter: brightness(0) invert(1);
+}
+</style>
