@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.logout = exports.getAccount = exports.login = exports.signup = void 0;
+exports.changePassword = exports.logout = exports.getAccount = exports.login = exports.setRobohashAvatar = exports.signup = void 0;
 const user_model_1 = require("../models/user.model");
 /**
  * Sign up (add user)
@@ -17,24 +17,32 @@ const user_model_1 = require("../models/user.model");
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, email, password } = req.body;
+        // 필수 필드 확인
         if (!username || !email || !password) {
             return res.status(400).json({ message: "Missing fields" });
         }
+        // 이메일 중복 확인
         const existingEmail = yield user_model_1.User.findOne({ email });
         if (existingEmail) {
             return res.status(400).json({ message: "Email already exists" });
         }
-        const newUser = yield user_model_1.User.create({ username, email, password });
+        // Robohash URL 생성 (seed는 email 또는 username 사용 가능)
+        const avatar = `https://robohash.org/${encodeURIComponent(email)}`;
+        // User 생성
+        const newUser = yield user_model_1.User.create({ username, email, password, avatar });
+        // 세션에 userId, 로그인 상태 저장
         if (req.session) {
             req.session.userId = newUser._id.toString();
             req.session.isLoggedIn = true;
         }
+        // 응답
         res.status(201).json({
             message: "User created",
             user: {
                 id: newUser._id,
                 username: newUser.username,
                 email: newUser.email,
+                avatar: newUser.avatar, // Robohash URL 포함
             },
         });
     }
@@ -44,6 +52,30 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.signup = signup;
+const setRobohashAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const userId = (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId;
+        if (!userId)
+            return res.status(401).json({ message: "Login required" });
+        const user = yield user_model_1.User.findById(userId);
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        // username을 seed로 사용
+        const seed = encodeURIComponent(user.username || user._id.toString());
+        const avatarUrl = `https://robohash.org/${seed}`;
+        user.avatar = avatarUrl;
+        yield user.save();
+        return res
+            .status(200)
+            .json({ message: "Avatar updated", avatar: avatarUrl });
+    }
+    catch (err) {
+        console.error("Set Robohash avatar error:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+});
+exports.setRobohashAvatar = setRobohashAvatar;
 /**
  * Log in (check user)
  */
@@ -142,6 +174,7 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.changePassword = changePassword;
 exports.default = {
+    setRobohashAvatar: exports.setRobohashAvatar,
     signup: exports.signup,
     login: exports.login,
     getAccount: exports.getAccount,

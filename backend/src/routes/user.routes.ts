@@ -9,5 +9,6 @@ userRouter.post("/login", checkLogout, userController.login);
 userRouter.get("/account", checkLogin, userController.getAccount);
 userRouter.post("/logout", checkLogin, userController.logout);
 userRouter.post("/change", checkLogin, userController.changePassword);
+userRouter.post("/photo", checkLogin, userController.setRobohashAvatar);
 
 export default userRouter;

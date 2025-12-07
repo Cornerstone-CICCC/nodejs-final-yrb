@@ -8,33 +8,66 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
 
+    // 필수 필드 확인
     if (!username || !email || !password) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
+    // 이메일 중복 확인
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    const newUser = await User.create({ username, email, password });
+    // Robohash URL 생성 (seed는 email 또는 username 사용 가능)
+    const avatar = `https://robohash.org/${encodeURIComponent(email)}`;
 
+    // User 생성
+    const newUser = await User.create({ username, email, password, avatar });
+
+    // 세션에 userId, 로그인 상태 저장
     if (req.session) {
       req.session.userId = newUser._id.toString();
       req.session.isLoggedIn = true;
     }
 
+    // 응답
     res.status(201).json({
       message: "User created",
       user: {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
+        avatar: newUser.avatar, // Robohash URL 포함
       },
     });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const setRobohashAvatar = async (req: Request, res: Response) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ message: "Login required" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // username을 seed로 사용
+    const seed = encodeURIComponent(user.username || user._id.toString());
+    const avatarUrl = `https://robohash.org/${seed}`;
+
+    user.avatar = avatarUrl;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Avatar updated", avatar: avatarUrl });
+  } catch (err) {
+    console.error("Set Robohash avatar error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -138,6 +171,7 @@ export const changePassword = async (req: Request, res: Response) => {
 };
 
 export default {
+  setRobohashAvatar,
   signup,
   login,
   getAccount,

@@ -12,4 +12,5 @@ userRouter.post("/login", auth_middleware_1.checkLogout, user_controller_1.defau
 userRouter.get("/account", auth_middleware_1.checkLogin, user_controller_1.default.getAccount);
 userRouter.post("/logout", auth_middleware_1.checkLogin, user_controller_1.default.logout);
 userRouter.post("/change", auth_middleware_1.checkLogin, user_controller_1.default.changePassword);
+userRouter.post("/photo", auth_middleware_1.checkLogin, user_controller_1.default.setRobohashAvatar);
 exports.default = userRouter;
