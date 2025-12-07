@@ -104,49 +104,6 @@ import "../styles/global.css"
     document.addEventListener("DOMContentLoaded", async () => {
 
 
-        /** Chats List */
-        const userCardList = document.querySelector(".user-card");
-
-        try {
-            const res = await fetch("http://localhost:3000/chat", {
-            method: "GET",
-            credentials: "include"
-            });
-
-            const rooms = await res.json();
-            console.log(rooms)
-            if (res.ok) {
-            userCardList.innerHTML = ""; 
-
-            rooms.forEach(room => {
-                const li = document.createElement("li");
-                 li.innerHTML = `
-                    <img src="../images/user_icon.svg" alt="User Icon">
-                    <div>
-                        <h3 class="title_user">${room.name || room.users.map(u => u.username || u).join(" & ")}</h3>
-                        <p class="details-chat">${room.latestMessage || "No messages"}</p>
-                    </div>
-                    <div>
-                        <span class="time">${new Date(room.updatedAt).toLocaleTimeString()}</span>
-                        <span class="badge">${room.unreadCount || 0}</span>
-                    </div>
-                    `;
-
-                 li.addEventListener("click", () => {
-                    window.location.href = `/detailChat.html?roomId=${room._id}`;
-                    localStorage.setItem("currentUserId", room.name);
-                });
-                userCardList.appendChild(li);
-            });
-            } else {
-            alert(rooms.error || "Charging chats error");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Connection error");
-        }
-
-
         /**Modal Create new Chat */
         const form = document.getElementById("newChatForm");
         const modal = document.getElementById("newChatModal");
@@ -164,11 +121,9 @@ import "../styles/global.css"
             alert("Add a username to create the chat");
             return;
         }
-
-        // 🔎 Validar si ya existe un chat con ese usuario
         const exists = Array.from(userCardList.children).some(li => {
             const title = li.querySelector(".title_user")?.textContent || "";
-            return title.includes(usernameB);
+            return title.toLowerCase().split(" & ").includes(usernameB.toLowerCase());
         });
 
         if (exists) {
@@ -181,31 +136,32 @@ import "../styles/global.css"
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ userB }),
-        });
+            body: JSON.stringify({ userB: usernameB }),
+            });
 
-        const room = await res.json();
+            const room = await res.json();
 
-        if (res.ok) {
-                const li = document.createElement("li");
-                const usernames = room.users.map(u => u.username).join(" & ");
-                li.innerHTML = `
+            if (res.ok) {
+            const li = document.createElement("li");
+            const otherUsernames = room.otherUsernames;
+            li.innerHTML = `
                 <img src="../images/user_icon.svg" alt="User Icon">
                 <div>
-                    <h3 class="title_user">${usernames}</h3>
-                    <p class="details-chat">New char with: ${room.otherUsernames}</p>
+                <h3 class="title_user">${otherUsernames}</h3>
+                <p class="details-chat">New chat with: ${otherUsernames}</p>
                 </div>
                 <div>
                 <span class="time">just now</span>
                 <span class="badge">0</span>
                 </div>
             `;
-            userCardList.appendChild(li);
 
+            userCardList.appendChild(li);
             alert("New chat created");
             form.reset();
             modal.style.display = "none";
-            } else {
+            }
+            else {
             alert(room.error || "Error creating new chat");
             }
         } catch (err) {
@@ -213,6 +169,53 @@ import "../styles/global.css"
             alert("Connection error");
         }
         });
+
+         /** Chats List */
+        const userCardList = document.querySelector(".user-card");
+        const currentUserId = localStorage.getItem("currentUserId");
+        console.log(currentUserId)
+        try {
+            const res = await fetch("http://localhost:3000/chat", {
+            method: "GET",
+            credentials: "include"
+            });
+
+            const rooms = await res.json();
+            console.log(rooms)
+            if (res.ok) {
+            userCardList.innerHTML = ""; 
+
+            rooms.forEach(room => {
+                const li = document.createElement("li");
+                const otherUser = room.users.find(u => String(u._id) !== String(currentUserId));
+                const otherUsername = otherUser ? otherUser.username : "Unknown";
+
+                li.innerHTML = `
+                    <img src="../images/user_icon.svg" alt="User Icon">
+                    <div>
+                    <h3 class="title_user">${otherUsername}</h3>
+                    <p class="details-chat">${room.latestMessage || "No messages"}</p>
+                    </div>
+                    <div>
+                    <span class="time">${new Date(room.updatedAt).toLocaleTimeString()}</span>
+                    <span class="badge">${room.unreadCount || 0}</span>
+                    </div>
+                `;
+
+                 li.addEventListener("click", () => {
+                    window.location.href = `/detailChat.html?roomId=${room._id}`;
+                    localStorage.setItem("contactUsername", otherUsername);
+                });
+                userCardList.appendChild(li);
+            });
+            } else {
+            alert(rooms.error || "Charging chats error");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Connection error");
+        }
+
 
 
         /** Modal Profile Edit */
