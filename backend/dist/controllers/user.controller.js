@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAccount = exports.changePassword = exports.logout = exports.getAccount = exports.login = exports.signup = void 0;
+exports.changePassword = exports.logout = exports.getAccount = exports.login = exports.signup = void 0;
 const user_model_1 = require("../models/user.model");
 /**
  * Sign up (add user)
@@ -100,13 +100,14 @@ exports.getAccount = getAccount;
  * Logout
  */
 const logout = (req, res) => {
-    if (req.session) {
-        req.session.userId = undefined;
-        req.session.isLoggedIn = false;
-    }
+    if (req.session)
+        req.session = null;
     res.status(200).json({ message: "Logout successful!" });
 };
 exports.logout = logout;
+/**
+ * Change password
+ */
 const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -140,35 +141,10 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.changePassword = changePassword;
-/**
- * Change password
- */
-const deleteAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    try {
-        const userId = (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId;
-        if (!userId)
-            return res.status(401).json({ message: "Login required" });
-        const user = yield user_model_1.User.findByIdAndDelete(userId);
-        if (!user)
-            return res.status(404).json({ message: "User not found" });
-        if (req.session) {
-            req.session.userId = undefined;
-            req.session.isLoggedIn = false;
-        }
-        res.json({ message: "Account deleted successfully" });
-    }
-    catch (err) {
-        console.error("Delete account error:", err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-exports.deleteAccount = deleteAccount;
 exports.default = {
     signup: exports.signup,
     login: exports.login,
     getAccount: exports.getAccount,
     logout: exports.logout,
     changePassword: exports.changePassword,
-    deleteAccount: exports.deleteAccount,
 };
