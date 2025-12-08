@@ -22,13 +22,11 @@ import "../styles/global.css";
 </Layout>
 
 <script>
-  // Importamos la función del script externo
   import { setupChat } from '../scripts/chat.js';
 
   const backBtn = document.querySelector(".back-btn");
 
     backBtn?.addEventListener("click", () => {
-      // Redirige a la página de chats
       window.location.href = "/chats";
     });
   
