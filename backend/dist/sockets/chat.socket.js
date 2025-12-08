@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const chat_model_1 = require("../models/chat.model");
+const room_model_1 = require("../models/room.model");
 const setupChatSocket = (io) => {
     io.on('connection', (socket) => {
         // On connect
@@ -69,6 +70,8 @@ const setupChatSocket = (io) => {
             // Save message in MongoDB
             const chat = yield chat_model_1.Chat.create({ roomId, message, userId });
             const populatedChat = yield chat.populate('userId', 'username avatar');
+            // Increment message count in Room
+            yield room_model_1.Room.updateOne({ _id: roomId }, { $inc: { messageCount: 1 } });
             io.to(roomId).emit("newMessage", populatedChat);
         }));
         // Disconnect

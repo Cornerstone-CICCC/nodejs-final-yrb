@@ -29,10 +29,11 @@ const getUserChatRooms = (req, res) => __awaiter(void 0, void 0, void 0, functio
             .populate('users', 'username avatar')
             .sort({ updatedAt: -1 })
             .lean();
-        // latestMessage
+        // latestMessage y contador
         for (let room of rooms) {
             const latestChat = yield chat_model_1.Chat.findOne({ roomId: room._id }).sort({ createdAt: -1 }).lean();
             room.latestMessage = latestChat ? latestChat.message : '';
+            room.unreadCount = room.messageCount || 0;
         }
         // search
         const keyword = req.query.q;
@@ -108,6 +109,8 @@ const getMessagesByRoom = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return res.status(403).json({ error: "You are not a member of this room" });
         }
         const messages = yield chat_model_1.Chat.find({ roomId }).sort({ createdAt: 1 });
+        // Resetear contador cuando se abre la sala
+        yield room_model_1.Room.updateOne({ _id: roomId }, { $set: { messageCount: 0 } });
         res.status(200).json(messages);
     }
     catch (error) {

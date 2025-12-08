@@ -39,6 +39,7 @@ const RoomSchema = new mongoose_1.Schema({
     users: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true }],
     name: { type: String },
     latestMessage: { type: String },
+    messageCount: { type: Number, default: 0 },
     createdAt: { type: Date },
     updatedAt: { type: Date },
 }, { timestamps: true });

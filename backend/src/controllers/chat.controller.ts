@@ -19,10 +19,11 @@ const getUserChatRooms = async (req: Request, res: Response) => {
     .sort({ updatedAt: -1 })
     .lean();
 
-    // latestMessage
+    // latestMessage y contador
     for (let room of rooms) {
       const latestChat = await Chat.findOne({ roomId: room._id }).sort({ createdAt: -1 }).lean();
       room.latestMessage = latestChat ? latestChat.message : '';
+      (room as any).unreadCount = room.messageCount || 0;
     }
 
     // search
@@ -113,6 +114,10 @@ const getMessagesByRoom = async (req: Request, res: Response) => {
     }
 
     const messages = await Chat.find({ roomId }).sort({ createdAt: 1 })
+    
+    // Resetear contador cuando se abre la sala
+    await Room.updateOne({ _id: roomId }, { $set: { messageCount: 0 } });
+    
     res.status(200).json(messages)
   } catch (error) {
     res.status(500).json({ error: 'Error fetching messages' })

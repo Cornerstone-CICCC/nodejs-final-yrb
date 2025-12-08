@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io'
 import mongoose from 'mongoose'
 import { Chat } from '../models/chat.model'
 import { User } from '../models/user.model'
+import { Room } from '../models/room.model'
 
 const setupChatSocket = (io: Server) => {
   io.on('connection', (socket: Socket) => {
@@ -66,6 +67,10 @@ const setupChatSocket = (io: Server) => {
       // Save message in MongoDB
       const chat = await Chat.create({ roomId, message, userId })
       const populatedChat = await chat.populate('userId', 'username avatar');
+      
+      // Increment message count in Room
+      await Room.updateOne({ _id: roomId }, { $inc: { messageCount: 1 } });
+      
       io.to(roomId).emit("newMessage", populatedChat);
     })
 
