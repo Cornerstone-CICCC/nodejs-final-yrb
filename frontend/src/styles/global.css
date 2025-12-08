@@ -327,10 +327,10 @@ body {
 }
 
 .logout-btn {
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.2);
   color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1rem;
   border-radius: 50px;
   cursor: pointer;
   display: flex;
@@ -739,17 +739,31 @@ body {
   margin-top: 1rem;
 }
 
+/* Reserve space at bottom so last messages are not hidden by fixed input */
+.chat-list-detail {
+  padding-bottom: 110px; /* height of input + comfortable gap */
+}
+
 .message {
   display: flex;
   align-items: flex-end;
   margin-bottom: 0.8rem;
 }
 
+/* Ensure each message takes full width so we can align its contents */
+.message {
+  width: 100%;
+}
+
+/* Incoming messages: avatar left, bubble left */
 .message.received {
+  justify-content: flex-start;
   flex-direction: row;
 }
 
+/* Outgoing messages: bubble on the right, avatar right */
 .message.sent {
+  justify-content: flex-end;
   flex-direction: row;
 }
 
@@ -788,13 +802,48 @@ body {
   text-align: right;
 }
 
+/* Specific spacing so sent/received look separated and aligned */
+.message.received .avatar {
+  margin-right: 0.6rem;
+  margin-left: 0;
+}
+
+.message.sent .avatar {
+  margin-left: 0.6rem;
+  margin-right: 0;
+}
+
+.message.received .bubble {
+  margin-left: 0.2rem;
+  text-align: left;
+}
+
+.message.sent .bubble {
+  margin-right: 0.2rem;
+  text-align: right;
+}
+
+.message.sent .bubble p {
+  text-align: right;
+}
+
+.message.received .bubble p {
+  text-align: left;
+}
+
 .chat-input-form {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  padding: 0.6rem 1rem;
+  padding: 0.8rem 1rem;
   background-color: #fff;
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.06);
+  z-index: 1200;
 }
 
 .message-input {
@@ -1126,9 +1175,10 @@ body {
   }
   
   .chat-input-form {
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
     max-width: 800px;
-    margin: 0 auto;
     padding: 1rem 2rem;
     border-top: 2px solid #f0f0f0;
   }
