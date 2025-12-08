@@ -1,0 +1,51 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+---
+
+<Layout>
+  <section class="detail-header">        
+    <button class="back-btn">←</button>
+    <h3 class="chat_username"></h3>        
+  </section>
+
+  <ul class="chat-list-detail"></ul>
+
+  <form class="chat-input-form">
+    <div class="message-input">
+      <input type="text" placeholder="Type message here..." />
+      <button type="submit">
+        <img src="../images/send_icon.svg" alt="Send" />
+      </button>
+    </div>
+  </form>
+</Layout>
+
+<script>
+  import { setupChat } from '../scripts/chat.js';
+
+  const backBtn = document.querySelector(".back-btn");
+
+    backBtn?.addEventListener("click", () => {
+      window.location.href = "/chats";
+    });
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("roomId") || "";
+    const currentUserId = localStorage.getItem("currentUserId") || "";
+    if (roomId && currentUserId) {
+      setupChat(roomId, currentUserId);
+    } else {
+      console.error("Faltan roomId o currentUserId");
+  }
+
+    const contactName = localStorage.getItem("contactUsername");
+    const titleElement = document.querySelector(".chat_username");
+    if (contactName && titleElement) {
+      titleElement.textContent = contactName;
+    }
+
+    
+  });
+</script>
