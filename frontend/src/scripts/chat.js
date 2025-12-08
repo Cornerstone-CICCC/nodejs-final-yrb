@@ -53,6 +53,7 @@ export function setupChat(roomId, currentUserId) {
     const li = document.createElement("li");
     const msgUserId = msg.userId?._id || msg.userId;
     const isCurrentUser = msgUserId === currentUserId || msg.userId === currentUserId;
+    const userAvatar = msg.userId?.avatar || "../images/user_icon.svg";
 
     if (isCurrentUser) {
       li.classList.add("message", "sent");
@@ -61,13 +62,13 @@ export function setupChat(roomId, currentUserId) {
           <p>${msg.message}</p>
           <span class="timestamp">${new Date(msg.createdAt).toLocaleTimeString()}</span>
         </div>
-        <img src="../images/user_icon.svg" alt="My Avatar" class="avatar" />
+        <img src="${userAvatar}" alt="My Avatar" class="avatar" />
       `;
     } else {
       li.classList.add("message", "received");
       const username = msg.userId?.username || msg.username || "User";
       li.innerHTML = `
-        <img src="../images/user_icon.svg" alt="${username} Avatar" class="avatar" />
+        <img src="${userAvatar}" alt="${username} Avatar" class="avatar" />
         <div class="bubble">
           <p>${msg.message}</p>
           <span class="timestamp">${new Date(msg.createdAt).toLocaleTimeString()}</span>

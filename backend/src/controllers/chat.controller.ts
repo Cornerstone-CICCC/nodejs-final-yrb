@@ -15,7 +15,7 @@ const getUserChatRooms = async (req: Request, res: Response) => {
 
     const mongoUserId = new mongoose.Types.ObjectId(userId)
     let rooms = await Room.find({ users: mongoUserId })
-    .populate('users', 'username')
+    .populate('users', 'username avatar')
     .sort({ updatedAt: -1 })
     .lean();
 

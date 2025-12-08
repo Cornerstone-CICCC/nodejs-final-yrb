@@ -52,12 +52,29 @@ export const setRobohashAvatar = async (req: Request, res: Response) => {
     const seed = encodeURIComponent(user.username || user._id.toString());
     const avatarUrl = `https://robohash.org/${seed}`;
 
+    // Save avatar URL in user document
     user.avatar = avatarUrl;
     await user.save();
 
-    return res
-      .status(200)
-      .json({ message: "Avatar updated", avatar: avatarUrl });
+    // Fetch the image and return as data URI to avoid CORS/cache issues on the client
+    try {
+      const fetchRes = await fetch(avatarUrl);
+      if (!fetchRes.ok) {
+        // Fallback: return URL only
+        return res.status(200).json({ message: "Avatar updated", avatar: avatarUrl });
+      }
+
+      const contentType = fetchRes.headers.get("content-type") || "image/png";
+      const arrayBuffer = await fetchRes.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString("base64");
+      const dataUri = `data:${contentType};base64,${base64}`;
+
+      return res.status(200).json({ message: "Avatar updated", avatar: avatarUrl, avatarData: dataUri });
+    } catch (err) {
+      console.error("Error fetching robohash image:", err);
+      return res.status(200).json({ message: "Avatar updated", avatar: avatarUrl });
+    }
   } catch (err) {
     console.error("Set Robohash avatar error:", err);
     return res.status(500).json({ message: "Server error" });
@@ -134,8 +151,8 @@ export const changePassword = async (req: Request, res: Response) => {
     const userId = req.session?.userId;
     if (!userId) return res.status(401).json({ message: "Login required" });
 
-    const { password, email } = req.body;
-    if (!password && !email)
+    const { password, email, avatar } = req.body;
+    if (!password && !email && !avatar)
       return res.status(400).json({ message: "Nothing to update" });
 
     const user = await User.findById(userId);
@@ -151,11 +168,13 @@ export const changePassword = async (req: Request, res: Response) => {
 
     if (password) user.password = password;
 
+    if (avatar) user.avatar = avatar;
+
     await user.save();
 
     res.json({
       message: "Account updated",
-      user: { id: user._id, username: user.username, email: user.email },
+      user: { id: user._id, username: user.username, email: user.email, avatar: user.avatar },
     });
   } catch (err) {
     console.error("Change password/email error:", err);
