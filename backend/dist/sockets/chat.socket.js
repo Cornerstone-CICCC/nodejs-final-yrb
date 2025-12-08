@@ -31,6 +31,7 @@ const setupChatSocket = (io) => {
                     socket.join(roomId);
                     joinedRooms.add(roomId);
                     const previousMessages = yield chat_model_1.Chat.find({ roomId: new mongoose_1.default.Types.ObjectId(roomId) })
+                        .populate('userId', 'username avatar')
                         .sort({ createdAt: 1 })
                         .lean();
                     socket.emit('previousMessages', { roomId, messages: previousMessages });
@@ -67,7 +68,7 @@ const setupChatSocket = (io) => {
             }
             // Save message in MongoDB
             const chat = yield chat_model_1.Chat.create({ roomId, message, userId });
-            const populatedChat = yield chat.populate('userId', 'username');
+            const populatedChat = yield chat.populate('userId', 'username avatar');
             io.to(roomId).emit("newMessage", populatedChat);
         }));
         // Disconnect

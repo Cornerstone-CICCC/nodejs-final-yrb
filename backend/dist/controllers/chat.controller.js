@@ -26,7 +26,7 @@ const getUserChatRooms = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return res.status(401).json({ error: "User not authenticated." });
         const mongoUserId = new mongoose_1.default.Types.ObjectId(userId);
         let rooms = yield room_model_1.Room.find({ users: mongoUserId })
-            .populate('users', 'username')
+            .populate('users', 'username avatar')
             .sort({ updatedAt: -1 })
             .lean();
         // latestMessage

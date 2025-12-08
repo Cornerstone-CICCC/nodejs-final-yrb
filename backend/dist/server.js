@@ -28,7 +28,7 @@ if (!process.env.COOKIE_PRIMARY_KEY || !process.env.COOKIE_SECONDARY_KEY) {
 app.use((0, cookie_session_1.default)({
     name: "session",
     keys: [process.env.COOKIE_PRIMARY_KEY, process.env.COOKIE_SECONDARY_KEY],
-    maxAge: 3 * 60 * 1000,
+    maxAge: 25 * 60 * 1000,
     sameSite: "lax",
     secure: false,
 }));

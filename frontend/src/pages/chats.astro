@@ -9,7 +9,7 @@ import "../styles/global.css"
             <div class="profile-chats">
                 <h2>CHAT APP</h2>
                 <button class="profile-btn">
-                    <img src="../images/user_icon.svg" alt="" >
+                    <img id="profileBtnAvatar" src="../images/user_icon.svg" alt="Profile" >
                 </button>
                 <button class="logout-btn" id="logoutBtn">
                     <img src="../images/logout_icon.svg" alt="Logout Icon">
@@ -57,11 +57,11 @@ import "../styles/global.css"
                 <div class="profile-avatar-container">
                     <div class="profile-avatar">
                         <img id="avatarImage" src="../images/user_icon.svg" alt="Avatar" />
-                        <button type="button" class="change-photo-btn" id="changePhotoBtn" aria-label="Cambiar foto de perfil">
-                            <img src="../images/profile_icon.svg" alt="Cambiar foto" width="20" height="20" />
-                        </button>
                         <input type="file" id="uploadPhoto" accept="image/*" style="display:none" />
                     </div>
+                    <button type="button" id="robohashAvatarBtn" class="edit-btn">
+                        Add Avatar
+                    </button>
                 </div>
 
 
@@ -102,6 +102,26 @@ import "../styles/global.css"
 
 <script is:inline>  
     document.addEventListener("DOMContentLoaded", async () => {
+
+        const updateProfileBtnAvatar = (avatarUrl) => {
+            const profileBtnImg = document.getElementById("profileBtnAvatar");
+            if (profileBtnImg && avatarUrl) {
+                profileBtnImg.src = avatarUrl + "?t=" + new Date().getTime();
+            }
+        };
+
+        try {
+            const res = await fetch("http://localhost:3000/users/account", {
+                method: "GET",
+                credentials: "include"
+            });
+            const data = await res.json();
+            if (res.ok && data.user.avatar) {
+                updateProfileBtnAvatar(data.user.avatar);
+            }
+        } catch (err) {
+            console.error("Error loading avatar on page init:", err);
+        }
 
 
         /**Modal Create new Chat */
@@ -189,9 +209,10 @@ import "../styles/global.css"
                 const li = document.createElement("li");
                 const otherUser = room.users.find(u => String(u._id) !== String(currentUserId));
                 const otherUsername = otherUser ? otherUser.username : "Unknown";
+                const otherAvatar = otherUser && otherUser.avatar ? otherUser.avatar : "../images/user_icon.svg";
 
                 li.innerHTML = `
-                    <img src="../images/user_icon.svg" alt="User Icon">
+                    <img src="${otherAvatar}" alt="User Icon">
                     <div>
                     <h3 class="title_user">${otherUsername}</h3>
                     <p class="details-chat">${room.latestMessage || "No messages"}</p>
@@ -222,6 +243,7 @@ import "../styles/global.css"
         const openProfileBtn = document.querySelector(".profile-btn");
         const closeProfileBtn = document.getElementById("closeProfile");
         const modalProfile = document.getElementById("profileModal");
+        
         openProfileBtn.addEventListener("click", async () => {
             modalProfile.style.display = "flex";
             try{
@@ -233,6 +255,14 @@ import "../styles/global.css"
                 if(res.ok){
                     document.getElementById("edit-username").value = data.user.username || "";
                     document.getElementById("edit-email").value = data.user.email || "";
+                    
+                    if (data.user.avatar) {
+                        const avatarImg = document.getElementById("avatarImage");
+                        if (avatarImg) {
+                            avatarImg.src = data.user.avatar + "?t=" + new Date().getTime();
+                        }
+                        updateProfileBtnAvatar(data.user.avatar);
+                    }
                 }else{
                     alert(data.message || "Error to charge the profile")
                 }
@@ -245,20 +275,59 @@ import "../styles/global.css"
             modalProfile.style.display = "none"; 
         });
 
-        window.addEventListener("click", (e) => {
-            if (e.target === modalProfile) {
-            modalProfile.style.display = "none"; 
-            }
-        });
+        const robohashBtn = document.getElementById("robohashAvatarBtn");
+        if (robohashBtn) {
+            robohashBtn.addEventListener("click", async () => {
+                try {
+                    const res = await fetch("http://localhost:3000/users/avatar/robohash", {
+                        method: "POST",
+                        credentials: "include"
+                    });
+                    const data = await res.json();
+                    console.log("Avatar response:", data);
+                    if (res.ok && data.avatar) {
+                        const avatarImg = document.getElementById("avatarImage");
+                        console.log("avatarImage element antes:", avatarImg);
+                        if (avatarImg) {
+                            const newImg = document.createElement("img");
+                            newImg.id = "avatarImage";
+                            newImg.alt = "Avatar";
+                            newImg.src = data.avatarData || (data.avatar + "?t=" + new Date().getTime());
+                            newImg.crossOrigin = "anonymous";
+                            
+                            avatarImg.parentNode.replaceChild(newImg, avatarImg);
+                        } else {
+                            console.error("Not found avatarImage element");
+                        }
+                        // Actualizar también el botón de perfil
+                        updateProfileBtnAvatar(data.avatar);
+                        alert("Avatar updated");
+                    } else {
+                        alert(data.message || "Error updating avatar");
+                    }
+                } catch (err) {
+                    console.error("Error:", err);
+                    alert("Connection error");
+                }
+            });
+        }
 
         const profileForm = document.getElementById("profileForm");
         profileForm.addEventListener("submit", async (e) =>{
             e.preventDefault();
+            const avatarImg = document.getElementById("avatarImage");
+            const currentAvatarUrl = avatarImg ? avatarImg.src : null;
+            
             const body = {
                 username: document.getElementById("edit-username").value.trim(),
                 email: document.getElementById("edit-email").value.trim(),
                 password: document.getElementById("edit-password").value.trim(),
             };
+            
+            if (currentAvatarUrl && !currentAvatarUrl.startsWith("data:")) {
+                body.avatar = currentAvatarUrl;
+            }
+            
              try {
                 const res = await fetch("http://localhost:3000/users/change", {
                     method: "POST",
@@ -270,6 +339,9 @@ import "../styles/global.css"
                 const data = await res.json();
                 if (res.ok) {
                     alert("Profile updated 🎉");
+                    if (body.avatar) {
+                        updateProfileBtnAvatar(body.avatar);
+                    }
                     modalProfile.style.display = "none";
                 } else {
                     alert(data.message || "Error updated Profile");
@@ -280,40 +352,7 @@ import "../styles/global.css"
                 }
             }
         )
-        /** Add profile photo */
-        const changeBtn = document.getElementById("changePhotoBtn");
-        const uploadInput = document.getElementById("uploadPhoto");
-        const avatarImage = document.getElementById("avatarImage");
-            
-        changeBtn.addEventListener("click", () => {
-            uploadInput.click();
-        });
-        uploadInput.addEventListener("change", async () => {
-            const file = uploadInput.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append("photo", file);
-
-            try {
-            const res = await fetch("http://localhost:3000/users/photo", {
-                method: "POST",
-                credentials: "include", 
-                body: formData,
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("Photo Profile updated 🎉");
-                avatarImage.src = data.photoUrl;
-            } else {
-                alert(data.message || "Error updated new photo");
-            }
-            } catch (err) {
-            console.error(err);
-            alert("Connection error");
-            }
-        });
+        
 
 
         /**Log out */

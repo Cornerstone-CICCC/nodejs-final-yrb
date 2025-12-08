@@ -57,11 +57,27 @@ const setRobohashAvatar = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return res.status(404).json({ message: "User not found" });
         const seed = encodeURIComponent(user.username || user._id.toString());
         const avatarUrl = `https://robohash.org/${seed}`;
+        // Save avatar URL in user document
         user.avatar = avatarUrl;
         yield user.save();
-        return res
-            .status(200)
-            .json({ message: "Avatar updated", avatar: avatarUrl });
+        // Fetch the image and return as data URI to avoid CORS/cache issues on the client
+        try {
+            const fetchRes = yield fetch(avatarUrl);
+            if (!fetchRes.ok) {
+                // Fallback: return URL only
+                return res.status(200).json({ message: "Avatar updated", avatar: avatarUrl });
+            }
+            const contentType = fetchRes.headers.get("content-type") || "image/png";
+            const arrayBuffer = yield fetchRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const base64 = buffer.toString("base64");
+            const dataUri = `data:${contentType};base64,${base64}`;
+            return res.status(200).json({ message: "Avatar updated", avatar: avatarUrl, avatarData: dataUri });
+        }
+        catch (err) {
+            console.error("Error fetching robohash image:", err);
+            return res.status(200).json({ message: "Avatar updated", avatar: avatarUrl });
+        }
     }
     catch (err) {
         console.error("Set Robohash avatar error:", err);
@@ -139,8 +155,8 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const userId = (_a = req.session) === null || _a === void 0 ? void 0 : _a.userId;
         if (!userId)
             return res.status(401).json({ message: "Login required" });
-        const { password, email } = req.body;
-        if (!password && !email)
+        const { password, email, avatar } = req.body;
+        if (!password && !email && !avatar)
             return res.status(400).json({ message: "Nothing to update" });
         const user = yield user_model_1.User.findById(userId);
         if (!user)
@@ -154,10 +170,12 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         if (password)
             user.password = password;
+        if (avatar)
+            user.avatar = avatar;
         yield user.save();
         res.json({
             message: "Account updated",
-            user: { id: user._id, username: user.username, email: user.email },
+            user: { id: user._id, username: user.username, email: user.email, avatar: user.avatar },
         });
     }
     catch (err) {

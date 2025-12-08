@@ -25,6 +25,7 @@ const setupChatSocket = (io: Server) => {
           joinedRooms.add(roomId);
 
           const previousMessages = await Chat.find({ roomId: new mongoose.Types.ObjectId(roomId) })
+            .populate('userId', 'username avatar')
             .sort({ createdAt: 1 })
             .lean()
           socket.emit('previousMessages', { roomId, messages: previousMessages });
@@ -64,7 +65,7 @@ const setupChatSocket = (io: Server) => {
 
       // Save message in MongoDB
       const chat = await Chat.create({ roomId, message, userId })
-      const populatedChat = await chat.populate('userId', 'username');
+      const populatedChat = await chat.populate('userId', 'username avatar');
       io.to(roomId).emit("newMessage", populatedChat);
     })
 
